@@ -12,7 +12,9 @@
 </body>
 <script>
 
-BPInstaller({ }).start(function(r) {
+BPInstaller({
+  debug: function(msg) { console.log(msg); }
+}).start(function(r) {
   alert("cb hit: " + r.success + ": " + r.error);
 });
 
