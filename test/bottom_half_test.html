@@ -10,7 +10,11 @@
     <h1>Applet Test</h1>
     <p>This little local file will load up and run the installer tool.</p>
 </body>
-    <script>
-      alert("We're good!"); 
-    </script>
+<script>
+
+BPInstaller({ }).start(function(r) {
+  alert("cb hit: " + r.success + ": " + r.error);
+});
+
+</script>
 </html>

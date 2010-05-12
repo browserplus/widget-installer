@@ -1,2 +1,17 @@
-all:
-	@echo "XXX: write me!"
+BUILD_PATH ?= build/
+SOURCES ?= bpInstallLib.js
+OUTPUTS = $(addprefix $(BUILD_PATH), $(SOURCES))
+
+all: $(BUILD_PATH) $(OUTPUTS)
+
+$(BUILD_PATH):
+	mkdir $(BUILD_PATH)
+
+$(OUTPUTS): $(BUILD_PATH)% : %
+	ln -s $(abspath $^) $@
+
+.PHONY: clean distclean
+clean: 
+	@rm -f $(OUTPUTS)
+
+distclean: clean
