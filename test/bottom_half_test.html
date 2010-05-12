@@ -13,7 +13,9 @@
 <script>
 
 BPInstaller({
-  debug: function(msg) { console.log(msg); }
+  debug: function(msg) { console.log(msg); },
+  pathToJar: "../build",
+  jarName: "bp_installer.jar"
 }).start(function(r) {
   alert("cb hit: " + r.success + ": " + r.error);
 });
