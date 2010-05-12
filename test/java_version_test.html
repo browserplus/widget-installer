@@ -1,0 +1,30 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>Extracting Java Version </title>
+</head>
+<body>
+    <h1>Applet Test</h1>
+    <p>This little local file will load up the installer tool.</p>
+</body>
+<applet codebase="../../assets/"
+        code="com.yahoo.browserplus.installer.javatest.class"
+        archive="bplusloader_signed.jar"
+        width="0" 
+        height="0"
+        id="bplusInstallerApplet"
+        name="bplusInstallerApplet_name"
+        mayscript="true">
+  <param name="codebase_lookup" value="false"></param>
+</applet>
+
+<script>
+  var javaVersion = null;
+  try {
+    javaVersion = document["bplusInstallerApplet_name"].getJavaVersion()
+  } catch (e) {
+  }
+  alert("java version: " + (javaVersion ? javaVersion : "not available"));
+</script>
+</html>
