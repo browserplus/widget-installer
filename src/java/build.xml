@@ -6,7 +6,7 @@
 	<property name="dist" location="build/dist"/> <!-- build product location -->
 	<property name="assets" location="build/assets"/> <!-- build product location -->
 	<property name="prod_keystore"
-              location="../../../../signing/java/javaverisign.ks"/> <!-- production code signing key for java -->
+			  location="${user.home}/.prodJavaCerts/java.ks" /> <!-- production code signing key for java -->
     <property name="test.html.file" location="test/applet_install.html"/>
 
     <!-- Our products.  Signed and unsigned JAR, and html -->
@@ -90,7 +90,7 @@
         <delete file="${signed.jarfile}" />
 
         <signjar jar="${jarfile}"
-            alias="midlet_verisign_sign"
+            alias="mykey"
             storepass="${prod.signpass}"
 			keystore="${prod_keystore}"
             signedjar="${signed.jarfile}"
