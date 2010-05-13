@@ -54,6 +54,15 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             "after we've confirmed that java is available on the machine but before we begin " +
             "the installation in earnest"
         ],
+        downloading: [
+            true, false, downloading_StateFunction,
+            "In the process of downloading the BrowserPlus installer"
+        ],
+        complete: [
+            true, false, complete_StateFunction,
+            "We expect that the installation has completed successfully and should be able to immediately " +
+            "invoke the client's callback"
+        ],
         error: [
             true, false, error_StateFunction,
             "an unrecoverable error was encountered during the installation attempt"
@@ -66,14 +75,21 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         }
     }
 
-    var emitEvent = function(e, pausable) {
+    var emitEvent = function(e, pausable, extra) {
         if (cfg && cfg.eventHandler) {
-            cfg.eventHandler(self, {
+            var ev = {
                 event: e,
                 desc: TheMachine[e][3],
                 pausable: pausable,
                 pause: pausable ? function() { PAUSED = true; } : null,
-            });
+            };
+            if (extra === null) extra = {};
+            for (k in extra) {
+                if (extra.hasOwnProperty(k)) {
+                    ev[k] = extra[k];
+                }
+            }
+            cfg.eventHandler(self, ev);
         }
     }
 
@@ -88,7 +104,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         stateTransition('error');
     }
 
-    var stateTransition = function (state) {
+    var stateTransition = function (state, extra) {
         debug("Attempt to transition from '"+STATE+"' to '"+state+"'");
         if (!TheMachine[state]) {
             throw "attempt to transition to non-existent state: " + state;
@@ -96,19 +112,29 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         STATE = state;
         var s = TheMachine[STATE];
         // if this is a state where we emit, then emit
-        if (s[0]) { emitEvent(state, s[1]); }
+        if (s[0]) { emitEvent(state, s[1], extra); }
 
         // if we are not paused, then move into the state
         if (!PAUSED && !CANCELED) { s[2](); } 
-        
     };
 
-    // The java checker object, responsibile for silently checking for the existence
-    // of java.
-    function javaCheck_StateFunction() {
-        debug("building java check DOM node"); 
-        var divId = UNIQUE_ID_FRAGMENT + "_check_id";
-        var appletName = UNIQUE_ID_FRAGMENT + "_check_name";
+    function getAppletContainer(divId, appletName, jarName, javaClass, params) {
+        var t =
+            '<applet codebase="' + cfg.pathToJar + '"' +
+            ' code="'+javaClass+'"' +
+            ' archive="' + jarName + '"' +
+            ' width="0" height="0" name="' + appletName + '" mayscript="true">';
+
+        if (!params.codebase_lookup) {
+            params["codebase_lookup"] = false;
+        }
+
+        for (var param in params) {
+            if (params.hasOwnProperty(param)) {
+                t += '<param name="'+param+'" value="'+params[param]+'"></param>';
+            }
+        }
+        t += '</applet>';
 
 	    var div = document.createElement("div");
         div.id = divId;
@@ -120,13 +146,18 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         div.style.position = "absolute";
         div.style.top = 0;
         div.style.left = 0;
-        div.innerHTML =
-            '<applet codebase="' + cfg.pathToJar + '"' +
-            ' code="com.yahoo.browserplus.installer.javatest.class"' +
-            ' archive="' + cfg.jarName + '"' +
-            ' width="0" height="0" name="' + appletName + '" mayscript="true">' +
-            '<param name="codebase_lookup" value="false"></param>' +
-            '</applet>';
+        div.innerHTML = t;
+        return div;
+    }
+
+    // The java checker object, responsibile for silently checking for the existence
+    // of java.
+    function javaCheck_StateFunction() {
+        debug("building java check DOM node"); 
+        var divId = UNIQUE_ID_FRAGMENT + "_check_id";
+        var appletName = UNIQUE_ID_FRAGMENT + "_check_name";
+        var div = getAppletContainer(divId, appletName, cfg.checkJarName,
+            "com.yahoo.browserplus.installer.javatest.class", {});
         debug("appending java check DOM node to DOM"); 
         document.body.appendChild(div);
 
@@ -156,12 +187,47 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     };
 
     function startJavaInstall_StateFunction() {
-        raiseError("bp.notImplemented", "not yet implemented");
+        debug("building java check DOM node"); 
+        var divId = UNIQUE_ID_FRAGMENT + "_install_id";
+        var appletName = UNIQUE_ID_FRAGMENT + "_install_name";
+        var div = getAppletContainer(divId, appletName, cfg.installJarName,
+            "com.yahoo.browserplus.installer.bplusloader.class",
+            {
+                installerBaseURL: cfg.installURL                
+            });
+        debug("appending java check DOM node to DOM"); 
+        document.body.appendChild(div);
+
+        // an async break to allow the applet to become ready.
+        debug("async break to allow for applet readiness"); 
+        var pollerId = setInterval(function() {
+            try {
+		        var applet = document[appletName];
+                var status = applet.status().status;
+                debug("applet status: " + status);
+                if (status === 'error') {
+                    clearInterval(pollerId);
+                    debug("java installer encountered an error"); 
+                    raiseError("bp.installerJavaError", "java installer encountered an error");
+                } else if (status === 'complete') {
+                    
+                } else if (status === 'downloading') {
+                    stateTransition('downloading', {percent: applet.status().percent}); 
+                } else {
+                    debug("UNEXPECTED STATUS: " + status);
+                }
+            } catch (e) {
+                clearInterval(pollerId);
+                debug("that was exceptional: " + e.name + ": " + e.message); 
+                raiseError("bp.installerJavascriptError", e.name + ": " + e.message);
+            }
+        }, 250);
     }
 
     function startFallbackInstall_StateFunction() {
         raiseError("bp.notImplemented", "not yet implemented");
     }
+
 
     function start_StateFunction()  {
         debug("validating inclusion of browserplus.js"); 
@@ -174,7 +240,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         // verify required arguments
         debug("validating required arguments"); 
         {
-            var requiredArgs = [ "pathToJar", "jarName" ];
+            var requiredArgs = [ "pathToJar", "installJarName", "checkJarName", "installURL" ];
             for (a in requiredArgs) {
                 if (!cfg || !cfg[requiredArgs[a]]) {
                     throw "BPInstaller missing required '"+ requiredArgs[a] +"' config parameter";
@@ -184,11 +250,20 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         debug("validated!"); 
     }
 
+
+    function downloading_StateFunction() {
+        // noop
+    }
+
+    function complete_StateFunction() {
+        // XXX: now we just need to init() browserplus and return!
+        raiseError("bp.notImplemented", "not yet implemented");
+    }
+
     function bpCheck_StateFunction() {
         // now we'll route through BrowserPlus's init call()
         $BP.init(initArgs, function(r) {
-            // XXX: remove this "true"
-            if (true) { //(!r.success && r.error === 'bp.notInstalled') {
+            if (!r.success && r.error === 'bp.notInstalled') {
                 // BrowserPlus is *not* installed!  now it's time to
                 // start the upsell dance.
                 debug("BrowserPlus not installed, checking for presence of java"); 

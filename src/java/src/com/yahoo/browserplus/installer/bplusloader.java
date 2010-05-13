@@ -121,7 +121,7 @@ public class bplusloader extends Applet {
 
             if (osname.startsWith("mac os x")){
                 this.download( new MacLoader( this ) );
-            }else { 
+            } else { 
                 this.download( new WinLoader( this ) );
             } 
             LOG("@@ start @@");
