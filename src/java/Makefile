@@ -16,7 +16,8 @@ $(FULLJARFILE): $(CLASSES)
 	@jar -cvf $@ -C $(BUILD_PATH) com
 	@jarsigner -storepass browserplus $@ $$USER
 
-$(CHECKJARFILE): $(BUILD_PATH) $(FULLJARFILE)	@jar -cvf $(CHECKJARFILE) -C $(BUILD_PATH) `cd $(BUILD_PATH) && find . -type f -name javatest.class`
+$(CHECKJARFILE): $(BUILD_PATH) $(FULLJARFILE)
+	@jar -cvf $(CHECKJARFILE) -C $(BUILD_PATH) `cd $(BUILD_PATH) && find . -type f -name javatest.class`
 
 .PHONY: signing_key
 signing_key: 
