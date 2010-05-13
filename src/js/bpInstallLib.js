@@ -26,7 +26,6 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     var clientCallback = null;
     var initArgs = null;
     var javaVersion = null;
-    var errorReturn = null;
 
     // this whole thing is a big state machine
     var TheMachine = {
@@ -59,12 +58,12 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             "In the process of downloading the BrowserPlus installer"
         ],
         complete: [
-            true, false, complete_StateFunction,
+            false, false, complete_StateFunction,
             "We expect that the installation has completed successfully and should be able to immediately " +
             "invoke the client's callback"
         ],
         error: [
-            true, false, error_StateFunction,
+            false, false, error_StateFunction,
             "an unrecoverable error was encountered during the installation attempt"
         ]
     };
@@ -96,12 +95,11 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     function raiseError(error, verboseError) {
         if (error === null) { error = "bp.installationError"; }
         if (verboseError === null) { verboseError = "" };
-        errorReturn = {
+        stateTransition('error', {
             success: false,
             error: error,
             verboseError: verboseError
-        };
-        stateTransition('error');
+        });
     }
 
     var stateTransition = function (state, extra) {
@@ -113,9 +111,8 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         var s = TheMachine[STATE];
         // if this is a state where we emit, then emit
         if (s[0]) { emitEvent(state, s[1], extra); }
-
         // if we are not paused, then move into the state
-        if (!PAUSED && !CANCELED) { s[2](); } 
+        if (!PAUSED && !CANCELED) { s[2](extra); } 
     };
 
     function getAppletContainer(divId, appletName, jarName, javaClass, params) {
@@ -255,30 +252,32 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         // noop
     }
 
-    function complete_StateFunction() {
-        // XXX: now we just need to init() browserplus and return!
-        raiseError("bp.notImplemented", "not yet implemented");
+    function complete_StateFunction(r) {
+        CANCELED = true;
+        clientCallback(r);
     }
 
     function bpCheck_StateFunction() {
         // now we'll route through BrowserPlus's init call()
         $BP.init(initArgs, function(r) {
-            if (!r.success && r.error === 'bp.notInstalled') {
+            if (r.success) {
+                // no work need be done!
+                stateTransition("complete", r);
+            } else if (r.error === 'bp.notInstalled') {
                 // BrowserPlus is *not* installed!  now it's time to
                 // start the upsell dance.
                 debug("BrowserPlus not installed, checking for presence of java"); 
                 stateTransition("javaCheck");
-            } else {
+            } else  {
                 debug("error returned from init, aborting installation: " + r.error); 
-                errorReturn = r;
-                stateTransition("error");
+                stateTransition("error", r);
             }
         });
     }
 
-    function error_StateFunction() {
+    function error_StateFunction(e) {
         CANCELED = true;
-        clientCallback(errorReturn);
+        clientCallback(e);
     }
         
     stateTransition("start");
