@@ -7,15 +7,35 @@
     <script type="text/javascript" src="../build/bpInstallLib.js"></script>
 </head>
 <body>
-    <h1>Applet Test</h1>
-    <p>This little local file will load up and run the installer tool.</p>
+    <h1>Installer Tool Test</h1>
+    <p>
+      This page will run the 'backend' of the browserplus installer tool from start to end.
+      you'll see events emitted below, and if you have a console.log() function, you'll see debug
+      output there too.
+    </p>
+    <pre id="outputArea"></pre>
 </body>
 <script>
 
+var startTime = new Date();
+
+var debugFunction = null;
+try {
+  console.log("do you have a console?");
+  debugFunction = function(msg) { console.log(msg); };
+} catch(e) {
+  // oh well, no debug logging for you!
+};
+
 BPInstaller({
-  debug: function(msg) { console.log(msg); },
+  debug: debugFunction,
   pathToJar: "../build",
-  jarName: "bp_installer.jar"
+  jarName: "bp_installer.jar",
+  eventHandler: function(i, e) {
+    var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" +
+              e.event + "' - " + e.desc + "\n";
+    var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
+  } 
 }).start(function(r) {
   alert("cb hit: " + r.success + ": " + r.error);
 });
