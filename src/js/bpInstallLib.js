@@ -222,7 +222,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         cancel: function() {
             CANCELED = true;              
         },
-        continue: function() {
+        "continue": function() {
             debug("client invokes continue when in the '"+STATE+"' state");
             if (PAUSED) {
                 PAUSED = false;
