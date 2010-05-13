@@ -33,7 +33,6 @@ package com.yahoo.browserplus.installer;
 import java.applet.Applet;
 
 public class javatest extends Applet {
-
 	public String getJavaVersion(){
 		return System.getProperty("java.version");
 	}

@@ -41,7 +41,12 @@ BPInstaller({
     var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
   } 
 }).start(function(r) {
-  alert("cb hit: " + r.success + ": " + r.error);
+  if (r.success) {
+    alert("browserplus is installed and ready to go!");
+  } else { 
+    alert("Installer tool returns an error: " + r.error +
+          ": " + r.verboseError);
+  }
 });
 
 </script>

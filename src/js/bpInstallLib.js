@@ -57,8 +57,12 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             true, false, downloading_StateFunction,
             "In the process of downloading the BrowserPlus installer"
         ],
+        launching: [
+            true, false, null,
+            "In the process of lauching the BrowserPlus installer in the background"
+        ],
         complete: [
-            false, false, complete_StateFunction,
+            true, false, complete_StateFunction,
             "We expect that the installation has completed successfully and should be able to immediately " +
             "invoke the client's callback"
         ],
@@ -112,7 +116,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         // if this is a state where we emit, then emit
         if (s[0]) { emitEvent(state, s[1], extra); }
         // if we are not paused, then move into the state
-        if (!PAUSED && !CANCELED) { s[2](extra); } 
+        if (!PAUSED && !CANCELED && typeof s[2] === 'function') { s[2](extra); } 
     };
 
     function getAppletContainer(divId, appletName, jarName, javaClass, params) {
@@ -202,14 +206,22 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
 		        var applet = document[appletName];
                 var status = applet.status().status;
                 debug("applet status: " + status);
-                if (status === 'error') {
-                    clearInterval(pollerId);
+                if (status == 'error') {
+                    clearInterval(pollerId);y
                     debug("java installer encountered an error"); 
                     raiseError("bp.installerJavaError", "java installer encountered an error");
-                } else if (status === 'complete') {
-                    
-                } else if (status === 'downloading') {
-                    stateTransition('downloading', {percent: applet.status().percent}); 
+                } else if (status == 'complete') {
+                    clearInterval(pollerId);
+                    $BP.init(initArgs, function(r) {
+                        stateTransition("complete", r);
+                    });
+                } else if (status == 'downloading') {
+                    stateTransition('downloading',
+                                    {percent: applet.status().percent}); 
+                } else if (status == 'launching') {
+                    if (STATE !== 'launching') {
+                        stateTransition('launching');
+                    }
                 } else {
                     debug("UNEXPECTED STATUS: " + status);
                 }
@@ -253,8 +265,12 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     }
 
     function complete_StateFunction(r) {
-        CANCELED = true;
-        clientCallback(r);
+        // needed for firefox
+        try {navigator.plugins.refresh(false);} catch(e) {}
+        setTimeout(function() {
+            CANCELED = true;
+            clientCallback(r);
+        }, 0);
     }
 
     function bpCheck_StateFunction() {
