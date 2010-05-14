@@ -119,12 +119,13 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         if (!PAUSED && !CANCELED && typeof s[2] === 'function') { s[2](extra); } 
     };
 
-    function getAppletContainer(divId, appletName, jarName, javaClass, params) {
+    function getAppletContainer(divId, appletId, jarName, javaClass, params) {
         var t =
             '<applet codebase="' + cfg.pathToJar + '"' +
             ' code="'+javaClass+'"' +
             ' archive="' + jarName + '"' +
-            ' width="0" height="0" name="' + appletName + '" mayscript="true">';
+            ' id="' + appletId + '"' 
+            ' width="0" height="0" name="Yahoo! BrowserPlus Installer" mayscript="true">';
 
         if (!params.codebase_lookup) {
             params["codebase_lookup"] = false;
@@ -156,8 +157,8 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     function javaCheck_StateFunction() {
         debug("building java check DOM node"); 
         var divId = UNIQUE_ID_FRAGMENT + "_check_id";
-        var appletName = UNIQUE_ID_FRAGMENT + "_check_name";
-        var div = getAppletContainer(divId, appletName, cfg.checkJarName,
+        var appletId = UNIQUE_ID_FRAGMENT + "_check_applet";
+        var div = getAppletContainer(divId, appletId, cfg.checkJarName,
             "com.yahoo.browserplus.installer.javatest.class", {});
         debug("appending java check DOM node to DOM"); 
         document.body.appendChild(div);
@@ -166,7 +167,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         debug("async break to allow for applet readiness"); 
         setTimeout(function() {
             try {
-                javaVersion = document[appletName].getJavaVersion();
+                javaVersion = document.getElementById(appletId).getJavaVersion();
             } catch (e) {
             }
             
@@ -189,9 +190,9 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
 
     function startJavaInstall_StateFunction() {
         debug("building java check DOM node"); 
-        var divId = UNIQUE_ID_FRAGMENT + "_install_id";
-        var appletName = UNIQUE_ID_FRAGMENT + "_install_name";
-        var div = getAppletContainer(divId, appletName, cfg.installJarName,
+        var divId = UNIQUE_ID_FRAGMENT + "_install_div";
+        var appletId = UNIQUE_ID_FRAGMENT + "_install_applet";
+        var div = getAppletContainer(divId, appletId, cfg.installJarName,
             "com.yahoo.browserplus.installer.bplusloader.class",
             {
                 installerBaseURL: cfg.installURL                
@@ -203,7 +204,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         debug("async break to allow for applet readiness"); 
         var pollerId = setInterval(function() {
             try {
-		        var applet = document[appletName];
+		        var applet = document.getElementById(appletId);
                 var status = applet.status().status;
                 debug("applet status: " + status);
                 if (status == 'error') {
@@ -279,7 +280,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             if (r.success) {
                 // no work need be done!
                 stateTransition("complete", r);
-            } else if (r.error === 'bp.notInstalled') {
+            } else if (true || r.error === 'bp.notInstalled') {
                 // BrowserPlus is *not* installed!  now it's time to
                 // start the upsell dance.
                 debug("BrowserPlus not installed, checking for presence of java"); 
