@@ -215,28 +215,38 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         var pollerId = setInterval(function() {
             try {
 		        var applet = document.getElementById(appletId);
-                var status = applet.status().status;
-                debug("applet status: " + status);
-                if (status == 'error') {
-                    clearInterval(pollerId);
-                    debug("java installer encountered an error"); 
-                    removeAppletTagFromDOM();
-                    raiseError("bp.installerJavaError", "java installer encountered an error");
-                } else if (status == 'complete') {
-                    clearInterval(pollerId);
-                    removeAppletTagFromDOM();
-                    $BP.init(initArgs, function(r) {
-                        stateTransition("complete", r);
-                    });
-                } else if (status == 'downloading') {
-                    stateTransition('downloading',
-                                    {percent: applet.status().percent}); 
-                } else if (status == 'launching') {
-                    if (STATE !== 'launching') {
-                        stateTransition('launching');
+                // Safari relinqueshes control to javascript when
+                // displaying the javascript "trust" dialog.  We must
+                // delay polling until the user interacts with that
+                // dialog
+                // XXX: handle "deny"
+                if ($BP.clientSystemInfo().browser !== 'Safari' ||
+                    applet.hasOwnProperty("isActive"))
+                {
+                    var status = String(applet.status().status);
+                    debug("applet status: " + status);
+                    if (status === 'error') {
+                        clearInterval(pollerId);
+                        debug("java installer encountered an error"); 
+                        removeAppletTagFromDOM();
+                        raiseError("bp.installerJavaError",
+                                   "java installer encountered an error");
+                    } else if (status == 'complete') {
+                        clearInterval(pollerId);
+                        removeAppletTagFromDOM();
+                        $BP.init(initArgs, function(r) {
+                            stateTransition("complete", r);
+                        });
+                    } else if (status == 'downloading') {
+                        stateTransition('downloading',
+                                        {percent: applet.status().percent}); 
+                    } else if (status == 'launching') {
+                        if (STATE !== 'launching') {
+                            stateTransition('launching');
+                        }
+                    } else {
+                        debug("UNEXPECTED STATUS: " + status);
                     }
-                } else {
-                    debug("UNEXPECTED STATUS: " + status);
                 }
             } catch (e) {
                 clearInterval(pollerId);
