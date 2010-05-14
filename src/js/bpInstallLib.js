@@ -295,7 +295,14 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         iframe.id = iframeId;
         document.body.appendChild(iframe);
 
-        // XXX: 1. cleanup dom
+        // schedule DOM cleanup
+        cleanups.push(function() {
+            try {
+                document.body.removeChild(document.getElementById(iframeId));
+            } catch(e) {
+                try { debug("couldn't remove download iframe: " + e); } catch(e) {}
+            }
+        });
 
         // transition to waitForUserCompletion
         stateTransition('waitForUserCompletion');
