@@ -124,7 +124,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             '<applet codebase="' + cfg.pathToJar + '"' +
             ' code="'+javaClass+'"' +
             ' archive="' + jarName + '"' +
-            ' id="' + appletId + '"' 
+            ' id="' + appletId + '"' +
             ' width="0" height="0" name="Yahoo! BrowserPlus Installer" mayscript="true">';
 
         if (!params.codebase_lookup) {
