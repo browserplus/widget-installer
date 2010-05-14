@@ -36,7 +36,14 @@ BPInstaller({
   eventHandler: function(i, e) {
     var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" +
               e.event + "' - " + e.desc;
-    if (e.hasOwnProperty('percent')) { msg += "(" + e.percent + "% complete)"; }
+    if (e.hasOwnProperty('percent')) {
+      msg += "(" + e.percent + "%";
+      if (e.hasOwnProperty('phase') && e.phase != null &&
+          String(e.phase).length > 0)
+      {
+        msg += " [" + String(e.phase) + " " + e.localPercent + "%]";
+      }
+    }
     msg += "\n";
     var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
   } 
