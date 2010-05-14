@@ -198,6 +198,16 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 installerBaseURL: cfg.installURL                
             });
         debug("appending java check DOM node to DOM"); 
+        function removeAppletTagFromDOM() {
+            // remove pollutant from DOM
+            try {
+                document.body.removeChild(document.getElementById(divId));
+            }
+            catch(e) {
+                try { debug("couldn't remove applet tag: " + e); } catch(e) {}
+            }
+        }
+
         document.body.appendChild(div);
 
         // an async break to allow the applet to become ready.
@@ -208,11 +218,13 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 var status = applet.status().status;
                 debug("applet status: " + status);
                 if (status == 'error') {
-                    clearInterval(pollerId);y
+                    clearInterval(pollerId);
                     debug("java installer encountered an error"); 
+                    removeAppletTagFromDOM();
                     raiseError("bp.installerJavaError", "java installer encountered an error");
                 } else if (status == 'complete') {
                     clearInterval(pollerId);
+                    removeAppletTagFromDOM();
                     $BP.init(initArgs, function(r) {
                         stateTransition("complete", r);
                     });
@@ -228,6 +240,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 }
             } catch (e) {
                 clearInterval(pollerId);
+                removeAppletTagFromDOM();
                 debug("that was exceptional: " + e.name + ": " + e.message); 
                 raiseError("bp.installerJavascriptError", e.name + ": " + e.message);
             }
