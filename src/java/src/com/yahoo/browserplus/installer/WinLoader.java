@@ -32,6 +32,10 @@ package com.yahoo.browserplus.installer;
 
 import java.applet.Applet;
 import java.io.File;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.text.NumberFormat;
 
 public class WinLoader extends BootstrapLoader{
     private String m_destination;
@@ -59,11 +63,12 @@ public class WinLoader extends BootstrapLoader{
 		return m_destination;
 	}
 	
-	public void loadInstaller()
+	public void loadInstaller(BootstrapLoader.ProgressUpdatee pee)
         throws java.io.IOException, java.lang.InterruptedException
     {
+        pee.setPercent(0);
+
         Runtime rt = Runtime.getRuntime();
-			
         String installer = getDestination();
         bplusloader.LOG( "Executing installer: " +  installer );
         String[] openCommand = {
@@ -73,10 +78,41 @@ public class WinLoader extends BootstrapLoader{
         };
         Process installerProc = rt.exec(openCommand);
 
+        pee.setPercent(5);
+
+        // collect installer progress
+        {
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(installerProc.getInputStream(), "UTF-8"));
+            String line;
+            int lastPercent = -1;
+            int percent;
+            
+            while ((line = reader.readLine()) != null) {
+                bplusloader.LOG( "read from installer: " + line );
+                try {
+                    percent = NumberFormat.getIntegerInstance().parse(line).intValue();
+                } catch (java.text.ParseException pe) {
+                    percent = 0;
+                }
+                
+                if (percent >=0 && percent <= 100 &&
+                    percent > lastPercent)
+                {
+                    lastPercent = percent;
+                    pee.setPercent((int) ((percent / 100.0) * 75.0) + 15);
+                }
+            }
+        }
+
         installerProc.waitFor();
+
+        pee.setPercent(95);
 
         // now delete the file
         new File(installer).delete();
+
+        pee.setPercent(100);
 	}
 	
 	class WinInstallerConfig extends BootstrapLoader.InstallerConfig{

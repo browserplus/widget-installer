@@ -7,13 +7,14 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.net.URLConnection;
 
-class DownloadThread implements Runnable 
+class DownloadThread implements Runnable, BootstrapLoader.ProgressUpdatee 
 {
     Thread m_runner;
     String m_address;
     String m_localFileName;
     String m_state;
-    int m_percent;
+    int m_totalPercent;
+    int m_localPercent;
     BootstrapLoader m_loader;
 
     public static void LOG(String msg) {
@@ -23,7 +24,8 @@ class DownloadThread implements Runnable
     public DownloadThread() 
     {
         m_state = "downloading";
-        m_percent = 0;
+        m_totalPercent = 0;
+        m_localPercent = 0;
     }
 
     public String getState() 
@@ -31,9 +33,31 @@ class DownloadThread implements Runnable
         return m_state;
     }
 
-    public int getPercent() 
+    public int getTotalPercent() 
     {
-        return m_percent;
+        return m_totalPercent;
+    }
+
+    public int getLocalPercent() 
+    {
+        return m_localPercent;
+    }
+
+    // sets local percent for the downloading of the installer which
+    // includes downloading and acounts about 20% of install time
+    public void setBootstrapPercent(int percent) 
+    {
+        m_localPercent = percent;
+        m_totalPercent = (int) (percent / 5.0);
+    }
+
+    // sets local percent for the running of the installer which
+    // includes downloading of platform and acounts about 80% of
+    // install time
+    public void setPercent(int percent) 
+    {
+        m_localPercent = percent;
+        m_totalPercent = (int) ((percent / 100.0) * 80.0) + 20;
     }
     
     public void start(BootstrapLoader loader, String address, String localFileName) 
@@ -51,15 +75,9 @@ class DownloadThread implements Runnable
     
     public void run() 
     {
-        //Display info about this particular thread
-        System.out.println("stupid thread is now running");
-        
         OutputStream out = null;
         URLConnection conn = null;
         InputStream in = null;
-
-        m_state = "downloading";                
-        LOG("**STATE("+m_state+")**");
 
         try {
             // Get the URL
@@ -86,35 +104,32 @@ class DownloadThread implements Runnable
             int numRead;
             int totalRead = 0;
             int lastPercent = -1;
-
+            int percent = 0;
+            
             while ((numRead = in.read(buffer)) != -1) {
                 totalRead += numRead;
-                m_percent = (100 * totalRead) / length;
-                if (m_percent != lastPercent && m_percent % 5 == 0) {
-                    lastPercent = m_percent;
-                    LOG( "Percent Done: " + m_percent );
+                percent = (100 * totalRead) / length;
+                if (percent != lastPercent && percent % 5 == 0) {
+                    lastPercent = percent;
+                    LOG( "Percent Done: " + percent );
+                    setBootstrapPercent(percent);
                 }
                 out.write(buffer, 0, numRead);
             } 
-            m_percent = 100;
-
+            setBootstrapPercent(100);
             LOG( "File Downloaded Succesfully!" );
-
-            m_state = "downloaded";                
-            LOG("**STATE("+m_state+")**");
+            m_state = "downloaded";
             
             if (in != null) { in.close(); }
             if (out != null) { out.close(); }
 
             LOG( "Loading the installer" );
-
-            m_state = "launching";                
+            m_state = "installing";
             LOG("**STATE("+m_state+")**");
-            m_loader.loadInstaller();
+            m_loader.loadInstaller(this);
             m_state = "complete";                
             LOG("**STATE("+m_state+")**");
             // Done! Just clean up and get out
-            
         } catch (java.lang.SecurityException exception) {
             LOG( "INSTALL FAILED!  Security Exception - Permissions maybe?.." );
             exception.printStackTrace();

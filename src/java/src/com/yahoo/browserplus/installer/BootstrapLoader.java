@@ -38,11 +38,18 @@ public abstract class BootstrapLoader {
 	
 	public abstract String getInstallerUrl();
 	public abstract String getDestination();
-	public abstract void loadInstaller()
+
+    public abstract interface ProgressUpdatee {
+		public abstract void setPercent(int percent);
+    }
+
+	public abstract void loadInstaller(ProgressUpdatee pee)
         throws java.io.IOException, java.lang.InterruptedException;
 	
+
 	
-	public abstract class InstallerConfig {
+    public abstract class InstallerConfig {
+
 
 		private String installerBaseURL = "http://browserplus.yahoo.com/dist/v2/installer/";
 		
@@ -52,7 +59,7 @@ public abstract class BootstrapLoader {
 		public InstallerConfig(Applet applet){
 			String installerBaseURL = applet.getParameter("installerBaseURL");
 			String destinationFileName = applet.getParameter("destinationFileName");
-	
+
 			this.setBaseUrl(installerBaseURL);
 			
 			this.setDestination(destinationFileName);			

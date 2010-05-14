@@ -49,13 +49,9 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             "after we've confirmed that java is available on the machine but before we begin " +
             "the installation in earnest"
         ],
-        downloading: [
-            true, false, downloading_StateFunction,
-            "In the process of downloading the BrowserPlus installer"
-        ],
-        launching: [
+        running: [
             true, false, null,
-            "In the process of lauching the BrowserPlus installer in the background"
+            "In the process of downloading, unpacking, and running the BrowserPlus installer to completion."
         ],
         startFallbackInstall: [
             true, true, startFallbackInstall_StateFunction,
@@ -214,6 +210,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
 
         // an async break to allow the applet to become ready.
         debug("async break to allow for applet readiness"); 
+        var lastPercentSent = -1;
         var pollerId = setInterval(function() {
             try {
 		        var applet = document.getElementById(appletId);
@@ -249,12 +246,18 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                                 stateTransition("complete", r);
                             });
                         }, 0);
-                    } else if (status === 'downloading') {
-                        stateTransition('downloading',
-                                        {percent: applet.status().percent}); 
-                    } else if (status === 'launching') {
-                        if (STATE !== 'launching') {
-                            stateTransition('launching');
+                    } else if (status === 'running') {
+                        // XXX: throttle?  only event when changed?
+                        var percent = applet.status().percent;
+                        if (lastPercentSent != percent) {
+                            lastPercentSent = percent;
+                            stateTransition(
+                                'running',
+                                {
+                                    percent: applet.status().percent,
+                                    localPercent: applet.status().localPercent,
+                                    phase: applet.status().phase
+                                });
                         }
                     } else {
                         debug("UNEXPECTED STATUS: " + status);
@@ -342,10 +345,6 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         debug("validated!"); 
     }
 
-
-    function downloading_StateFunction() {
-        // noop
-    }
 
     function complete_StateFunction(r) {
         CANCELED = true;

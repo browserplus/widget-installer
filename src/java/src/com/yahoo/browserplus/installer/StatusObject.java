@@ -34,4 +34,6 @@ public class StatusObject
 {
     public String status;
     public int percent;
+    public int localPercent;
+    public String phase;
 };

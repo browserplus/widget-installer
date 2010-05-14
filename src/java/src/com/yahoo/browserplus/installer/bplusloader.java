@@ -96,16 +96,19 @@ public class bplusloader extends Applet {
 
     public StatusObject status() 
     {
-        LOG("VVV status VVV");
         StatusObject so = new StatusObject();
         if (m_state == "threadSpawned") {
-            so.status = m_dlThread.getState();
-            so.percent = m_dlThread.getPercent();
+            String phase = m_dlThread.getState();
+            so.status = (phase == "complete" ? "complete" : "running");
+            so.percent = m_dlThread.getTotalPercent();
+            so.localPercent = m_dlThread.getLocalPercent();
+            so.phase = phase;
         } else {
             so.status = m_state;
             so.percent = m_percent;
+            so.localPercent = 0;
+            so.phase = null;
         }
-        LOG("^^^ status ^^^");
         return so;
     }
 

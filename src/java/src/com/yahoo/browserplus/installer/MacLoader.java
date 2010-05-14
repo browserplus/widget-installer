@@ -32,6 +32,10 @@ package com.yahoo.browserplus.installer;
 
 import java.applet.Applet;
 import java.io.File;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.text.NumberFormat;
 
 public class MacLoader extends BootstrapLoader {
             
@@ -56,11 +60,13 @@ public class MacLoader extends BootstrapLoader {
         return destination;
     }
     
-    public void loadInstaller()
+    public void loadInstaller(BootstrapLoader.ProgressUpdatee pee)
         throws java.io.IOException, java.lang.InterruptedException
     {
         
         bplusloader.LOG("Begin extraction and execution of BrowserPlus installer");
+        pee.setPercent(0);
+        
         Runtime rt = Runtime.getRuntime();
             
         String tmpdir = System.getProperty("java.io.tmpdir") +
@@ -80,6 +86,8 @@ public class MacLoader extends BootstrapLoader {
             bplusloader.LOG( "Can't toggle Quarantine bit, perhaps this is "
                              + "< OSX leopard?  no worries." );
         }
+
+        pee.setPercent(5);
             
         String[] mountCommand = {
             "hdiutil",
@@ -92,6 +100,8 @@ public class MacLoader extends BootstrapLoader {
             
         bplusloader.LOG( "Waiting for DMG to be mounted" );
         mount.waitFor();
+
+        pee.setPercent(10);
 
         String installerPath = mountPoint +
             "/BrowserPlus Installer.app/Contents/MacOS/BrowserPlusInstaller";
@@ -107,11 +117,40 @@ public class MacLoader extends BootstrapLoader {
             "-verbose=true"
         };
         Process runInstaller = rt.exec(openCommand);
-            
-        // wait for the installation to complete so we can properly
-        // clean up
-        runInstaller.waitFor();
 
+        pee.setPercent(15);
+
+        // collect installer progress
+        {
+            BufferedReader reader = new BufferedReader(
+                new InputStreamReader(runInstaller.getInputStream(), "UTF-8"));
+            String line;
+            int lastPercent = -1;
+            int percent;
+            
+            while ((line = reader.readLine()) != null) {
+                bplusloader.LOG( "read from installer: " + line );
+                try {
+                    percent = NumberFormat.getIntegerInstance().parse(line).intValue();
+                } catch (java.text.ParseException pe) {
+                    percent = 0;
+                }
+                
+                if (percent >=0 && percent <= 100 &&
+                    percent > lastPercent)
+                {
+                    lastPercent = percent;
+                    pee.setPercent((int) ((percent / 100.0) * 75.0) + 15);
+                }
+            }
+            
+            // wait for the installation to complete so we can properly
+            // clean up
+            runInstaller.waitFor();
+        }
+
+        pee.setPercent(90);
+        
         bplusloader.LOG( "Installer complete, now unmounting " + mountPoint );
 
         // now unmount the image
@@ -123,10 +162,14 @@ public class MacLoader extends BootstrapLoader {
         Process unmountProc = rt.exec(unmountCommand);
         unmountProc.waitFor();            
 
+        pee.setPercent(95);
+
         bplusloader.LOG( "Finally, deleting dmg at  " + dmgPath );
         String[] rmCommand = { "rm", dmgPath };
         Process rmProc = rt.exec(rmCommand);
         rmProc.waitFor();            
+
+        pee.setPercent(100);
             
         bplusloader.LOG( "All done!" );
             
