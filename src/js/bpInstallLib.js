@@ -221,22 +221,28 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 {
                     var status = String(applet.status().status);
                     debug("applet status: " + status);
-                    if (status === 'error') {
+                    if (status === 'starting') {
+                        // noop
+                    } if (status === 'error') {
                         clearInterval(pollerId);
                         debug("java installer encountered an error"); 
                         removeAppletTagFromDOM();
                         raiseError("bp.installerJavaError",
                                    "java installer encountered an error");
-                    } else if (status == 'complete') {
+                    } else if (status === 'complete') {
                         clearInterval(pollerId);
                         removeAppletTagFromDOM();
-                        $BP.init(initArgs, function(r) {
-                            stateTransition("complete", r);
-                        });
-                    } else if (status == 'downloading') {
+                        // needed for firefox
+                        try {navigator.plugins.refresh(false);} catch(e) {}
+                        setTimeout(function() {
+                            $BP.init(initArgs, function(r) {
+                                stateTransition("complete", r);
+                            });
+                        }, 0);
+                    } else if (status === 'downloading') {
                         stateTransition('downloading',
                                         {percent: applet.status().percent}); 
-                    } else if (status == 'launching') {
+                    } else if (status === 'launching') {
                         if (STATE !== 'launching') {
                             stateTransition('launching');
                         }
@@ -285,12 +291,8 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     }
 
     function complete_StateFunction(r) {
-        // needed for firefox
-        try {navigator.plugins.refresh(false);} catch(e) {}
-        setTimeout(function() {
-            CANCELED = true;
-            clientCallback(r);
-        }, 0);
+        CANCELED = true;
+        clientCallback(r);
     }
 
     function bpCheck_StateFunction() {
