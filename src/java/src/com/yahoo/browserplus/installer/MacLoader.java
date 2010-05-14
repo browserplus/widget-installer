@@ -92,7 +92,7 @@ public class MacLoader extends BootstrapLoader {
         String[] mountCommand = {
             "hdiutil",
             "mount",
-            "-private", dmgPath,
+            "-private", "-nobrowse", dmgPath,
             "-mountpoint", mountPoint};
 
         bplusloader.LOG( "Mounting DMG: " + dmgPath + " in:" + mountPoint );
