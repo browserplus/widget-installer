@@ -26,6 +26,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     var clientCallback = null;
     var initArgs = null;
     var javaVersion = null;
+    var cleanups = [ ];
 
     // this whole thing is a big state machine
     var TheMachine = {
@@ -48,11 +49,6 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             "after we've confirmed that java is available on the machine but before we begin " +
             "the installation in earnest"
         ],
-        startFallbackInstall: [
-            true, true, startFallbackInstall_StateFunction,
-            "after we've confirmed that java is available on the machine but before we begin " +
-            "the installation in earnest"
-        ],
         downloading: [
             true, false, downloading_StateFunction,
             "In the process of downloading the BrowserPlus installer"
@@ -60,6 +56,16 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         launching: [
             true, false, null,
             "In the process of lauching the BrowserPlus installer in the background"
+        ],
+        startFallbackInstall: [
+            true, true, startFallbackInstall_StateFunction,
+            "after we've confirmed that java is available on the machine but before we begin " +
+            "the installation in earnest"
+        ],
+        waitForUserCompletion: [
+            true, false, waitForUserCompletion_StateFunction,
+            "We've caused a download and are now waiting for the user to complete the installation " +
+            "of BrowserPlus.  cancel() may be called in this state and will clean up."
         ],
         complete: [
             true, false, complete_StateFunction,
@@ -176,7 +182,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             }
 
             // XXX: parse javaVersion to ensure correct handling of older versions.
-            if (javaVersion !== null) {
+            if (false && javaVersion !== null) {
                 stateTransition("startJavaInstall");
             } else {
                 stateTransition("startFallbackInstall");                
@@ -260,9 +266,49 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     }
 
     function startFallbackInstall_StateFunction() {
-        raiseError("bp.notImplemented", "not yet implemented");
+        // fallback installation involves us attaching an iframe to the DOM
+        // which will trigger the normal download of our installer. (as if a
+        // user had clicked on a direct link or typed the filename into the
+        // location bar).
+        //
+        // NOTE: continue() should be called in a click event handler, otherwise
+        // certain browsers will make it hard for the user to see the download
+        // event (considering it to be a "drive by download").
+
+        var csi = BrowserPlus.clientSystemInfo();
+
+        var downloadPath = "";
+        if (csi.os === "Mac") {
+            downloadPath = cfg.installURL + "osx/";    
+        } else {
+            downloadPath = cfg.installURL + "win32/";    
+        }
+
+        var iframeId = UNIQUE_ID_FRAGMENT + "_download_iframe";
+        var iframe = document.createElement("iframe");
+        iframe.src = downloadPath;
+        iframe.style.display = "none";
+        iframe.id = iframeId;
+        document.body.appendChild(iframe);
+
+        // XXX: 1. cleanup dom
+
+        // transition to waitForUserCompletion
+        stateTransition('waitForUserCompletion');
     }
 
+    function waitForUserCompletion_StateFunction() {
+        setTimeout(function() {
+            try { navigator.plugins.refresh(false); } catch(e) { }
+            $BP.init(initArgs, function(r) {
+                if (r.success || r.error !== 'bp.notInstalled') {
+                    stateTransition('complete', r);
+                } else {
+                    waitForUserCompletion_StateFunction();
+                }
+            });
+        }, 700);
+    }
 
     function start_StateFunction()  {
         debug("validating inclusion of browserplus.js"); 
@@ -293,6 +339,16 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     function complete_StateFunction(r) {
         CANCELED = true;
         clientCallback(r);
+
+        // now run any remaining cleanups.
+        while (cleanups.length) {
+            try {
+                var f = cleanups.pop();
+                f();
+            } catch(e) {
+                try { debug("couldn't run cleanup function: " + e); } catch(e) {}                
+            }
+        }
     }
 
     function bpCheck_StateFunction() {
@@ -301,7 +357,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             if (r.success) {
                 // no work need be done!
                 stateTransition('complete', r);
-            } else if (true || r.error === 'bp.notInstalled') {
+            } else if (r.error === 'bp.notInstalled') {
                 // BrowserPlus is *not* installed!  now it's time to
                 // start the upsell dance.
                 debug("BrowserPlus not installed, checking for presence of java"); 
