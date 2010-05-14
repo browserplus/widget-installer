@@ -65,10 +65,6 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             true, false, complete_StateFunction,
             "We expect that the installation has completed successfully and should be able to immediately " +
             "invoke the client's callback"
-        ],
-        error: [
-            false, false, error_StateFunction,
-            "an unrecoverable error was encountered during the installation attempt"
         ]
     };
 
@@ -99,7 +95,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     function raiseError(error, verboseError) {
         if (error === null) { error = "bp.installationError"; }
         if (verboseError === null) { verboseError = "" };
-        stateTransition('error', {
+        stateTransition('complete', {
             success: false,
             error: error,
             verboseError: verboseError
@@ -302,7 +298,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         $BP.init(initArgs, function(r) {
             if (r.success) {
                 // no work need be done!
-                stateTransition("complete", r);
+                stateTransition('complete', r);
             } else if (true || r.error === 'bp.notInstalled') {
                 // BrowserPlus is *not* installed!  now it's time to
                 // start the upsell dance.
@@ -310,16 +306,11 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 stateTransition("javaCheck");
             } else  {
                 debug("error returned from init, aborting installation: " + r.error); 
-                stateTransition("error", r);
+                stateTransition('complete', r);
             }
         });
     }
 
-    function error_StateFunction(e) {
-        CANCELED = true;
-        clientCallback(e);
-    }
-        
     stateTransition("start");
 
     var self = {
