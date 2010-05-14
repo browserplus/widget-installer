@@ -238,8 +238,12 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                     } else if (status === 'complete') {
                         clearInterval(pollerId);
                         removeAppletTagFromDOM();
-                        // needed for firefox
-                        try {navigator.plugins.refresh(false);} catch(e) {}
+                        // explicit refresh needed for firefox, but
+                        // will make other browsers reload the parent
+                        // page (doh).
+                        if ($BP.clientSystemInfo().browser === 'Firefox') {
+                            try {navigator.plugins.refresh(false);} catch(e) {}
+                        }
                         setTimeout(function() {
                             $BP.init(initArgs, function(r) {
                                 stateTransition("complete", r);
