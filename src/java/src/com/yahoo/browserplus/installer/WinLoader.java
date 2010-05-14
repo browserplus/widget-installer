@@ -66,7 +66,13 @@ public class WinLoader extends BootstrapLoader{
 			
         String installer = getDestination();
         bplusloader.LOG( "Executing installer: " +  installer );
-        Process installerProc = rt.exec("\"" + installer + "\"");
+        String[] openCommand = {
+            installer,
+            "-nogui=true",
+            "-verbose=true"
+        };
+        Process installerProc = rt.exec(openCommand);
+
         installerProc.waitFor();
 
         // now delete the file

@@ -101,7 +101,11 @@ public class MacLoader extends BootstrapLoader {
         // 10.4 doesn't support the -W flag (wait for completion before
         // exiting).  For this reason we specify the full path to the
         // binary withing the installer.
-        String[] openCommand = { installerPath };
+        String[] openCommand = {
+            installerPath,
+            "-nogui=true",
+            "-verbose=true"
+        };
         Process runInstaller = rt.exec(openCommand);
             
         // wait for the installation to complete so we can properly
