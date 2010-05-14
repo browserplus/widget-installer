@@ -63,8 +63,8 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         ],
         complete: [
             true, false, complete_StateFunction,
-            "We expect that the installation has completed successfully and should be able to immediately " +
-            "invoke the client's callback"
+            "The installation procedure has completed either successfully or not, the client callback " +
+            "will be invoked immediately with a proper result code."
         ]
     };
 
