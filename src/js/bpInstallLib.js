@@ -182,7 +182,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             }
 
             // XXX: parse javaVersion to ensure correct handling of older versions.
-            if (false && javaVersion !== null) {
+            if (javaVersion !== null) {
                 stateTransition("startJavaInstall");
             } else {
                 stateTransition("startFallbackInstall");                
