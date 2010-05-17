@@ -10,7 +10,7 @@ endif
 all: subdirs
 ifeq ($(TARGET), "tag")
 	git tag $(TAG)
-	@cd $(BUILD_PATH) && tar czvf widget_installer_$(TAG).tgz bp_installer_signed.jar bp_java_check.jar bpInstallLib.js
+	@cd $(BUILD_PATH) && tar chzvf widget_installer_$(TAG).tgz bp_installer_signed.jar bp_java_check.jar bpInstallLib.js
 endif
 
 .PHONY: subdirs $(SUBDIRS) 
