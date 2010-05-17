@@ -4,7 +4,7 @@
     <meta http-equiv="Content-type" content="text/html; charset=utf-8">
     <title>BrowserPlus Installation Applet Test</title>
     <script type="text/javascript" src="http://bp.yahooapis.com/2.7.1/browserplus-min.js"></script>
-    <script type="text/javascript" src="../build/bpInstallLib.js"></script>
+    <script type="text/javascript" src="bpInstallLib.js"></script>
     <script type="text/javascript" charset="utf-8"
             src="http://yui.yahooapis.com/3.1.1/build/yui/yui-min.js">
     </script>
@@ -40,7 +40,7 @@ YUI().use('event', function(Y) {
   nextStep = function() {
     BPInstaller({
       debug: debugFunction,
-      pathToJar: "../build",
+      pathToJar: ".",
       installJarName: "bp_installer.jar",
       checkJarName: "bp_java_check.jar",
       installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
