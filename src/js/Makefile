@@ -3,6 +3,7 @@ SOURCES ?= bpInstallLib.js
 OUTPUTS = $(addprefix $(BUILD_PATH), $(SOURCES))
 
 all: $(BUILD_PATH) $(OUTPUTS)
+tag: all
 
 $(BUILD_PATH):
 	mkdir $(BUILD_PATH)
