@@ -1,0 +1,82 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <title>BrowserPlus Installation Applet Test</title>
+    <script type="text/javascript" src="http://bp.yahooapis.com/2.7.1/browserplus-min.js"></script>
+    <script type="text/javascript" src="../build/bpInstallLib.js"></script>
+    <script type="text/javascript" charset="utf-8"
+            src="http://yui.yahooapis.com/3.1.1/build/yui/yui-min.js">
+    </script>
+</head>
+<body>
+    <h1>Installer Tool Test</h1>
+    <p>
+      This page will run the 'backend' of the browserplus installer
+      tool from start to end, blocking at every possible opportunity.
+      You'll see events emitted below, and if you have a console.log()
+      function, you'll see debug output there too.
+    </p>
+    <center><input type="button" id="gogo" value="Start"/></center>
+    <pre id="outputArea"></pre>
+</body>
+<script>
+
+var startTime = new Date();
+
+var debugFunction = null;
+try {
+  console.log("do you have a console?");
+  debugFunction = function(msg) { console.log(msg); };
+} catch(e) {
+  // oh well, no debug logging for you!
+};
+
+var nextStep = null;
+
+// Create new YUI instance, and populate it with the required modules
+YUI().use('event', function(Y) {
+  Y.on("click", function() { if (nextStep) { nextStep() } }, "#gogo");
+  nextStep = function() {
+    BPInstaller({
+      debug: debugFunction,
+      pathToJar: "../build",
+      installJarName: "bp_installer.jar",
+      checkJarName: "bp_java_check.jar",
+      installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
+      eventHandler: function(i, e) {
+        var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" +
+                  e.event + "' - " + e.desc;
+        if (e.hasOwnProperty('percent')) {
+          msg += "(" + e.percent + "%";
+          if (e.hasOwnProperty('phase') && e.phase != null &&
+              String(e.phase).length > 0)
+          {
+            msg += " [" + String(e.phase) + " " + e.localPercent + "%]";
+          }
+        }
+        msg += "\r\n";
+        var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
+        if (e.pausable) {
+          e.pause();
+          Y.one("#gogo").set("value", "Continue");
+          nextStep = function() { i["continue"](); };
+        }
+      } 
+    }).start(function(r) {
+        Y.one("#gogo").set("value", "All done");
+        nextStep = function() {
+        alert("installation attempt is complete");
+      };
+      if (r.success) {
+        alert("browserplus is installed and ready to go!");
+      } else { 
+        alert("Installer tool returns an error: " + r.error +
+              ": " + r.verboseError);
+      }
+    });
+  };
+});
+
+</script>
+</html>
