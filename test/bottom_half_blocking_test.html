@@ -55,7 +55,7 @@ YUI().use('event', function(Y) {
             msg += " [" + String(e.phase) + " " + e.localPercent + "%]";
           }
         }
-        msg += "\n";
+        msg += "\r\n";
         var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
         if (e.pausable) {
           e.pause();

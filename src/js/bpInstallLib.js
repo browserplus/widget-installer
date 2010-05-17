@@ -82,7 +82,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                 event: e,
                 desc: TheMachine[e][3],
                 pausable: pausable,
-                pause: pausable ? function() { PAUSED = true; } : null,
+                pause: pausable ? function() { PAUSED = true; } : null
             };
             if (extra === null) extra = {};
             for (k in extra) {
@@ -136,7 +136,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         }
         t += '</applet>';
 
-	    var div = document.createElement("div");
+            var div = document.createElement("div");
         div.id = divId;
         div.style.visibility = "hidden";
         try { div.style.borderStyle = "hidden"; } catch (e) { }
@@ -213,7 +213,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         var lastPercentSent = -1;
         var pollerId = setInterval(function() {
             try {
-		        var applet = document.getElementById(appletId);
+                        var applet = document.getElementById(appletId);
                 // Safari relinqueshes control to javascript when
                 // displaying the javascript "trust" dialog.  We must
                 // delay polling until the user interacts with that
@@ -335,10 +335,15 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         // verify required arguments
         debug("validating required arguments"); 
         {
-            var requiredArgs = [ "pathToJar", "installJarName", "checkJarName", "installURL" ];
+            var requiredArgs = [
+                "pathToJar", "installJarName", "checkJarName", "installURL"
+            ];
             for (a in requiredArgs) {
-                if (!cfg || !cfg[requiredArgs[a]]) {
-                    throw "BPInstaller missing required '"+ requiredArgs[a] +"' config parameter";
+                if (requiredArgs.hasOwnProperty(a)) {
+                    if (!cfg || !cfg[requiredArgs[a]]) {
+                        throw "BPInstaller missing required '"+
+                            requiredArgs[a] +"' config parameter";
+                    }
                 }
             }
         }

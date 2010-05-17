@@ -27,7 +27,7 @@ try {
   // oh well, no debug logging for you!
 };
 
-BPInstaller({
+var installer = BPInstaller({
   debug: debugFunction,
   pathToJar: "../build",
   installJarName: "bp_installer.jar",
@@ -47,7 +47,9 @@ BPInstaller({
     msg += "\n";
     var n = document.getElementById('outputArea').appendChild(document.createTextNode(msg));
   } 
-}).start(function(r) {
+});
+
+installer.start(function(r) {
   if (r.success) {
     alert("browserplus is installed and ready to go!");
   } else { 
