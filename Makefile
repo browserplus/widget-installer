@@ -1,14 +1,9 @@
 export BUILD_PATH = $(abspath build)/
 
 SUBDIRS = src/js src/java
-ifeq ($(TAG), "")
-   TARGET = ""
-else
-   TARGET = "tag"
-endif
 
 all: subdirs
-ifeq ($(TARGET), "tag")
+ifdef TAG
 	git tag $(TAG)
 	@cd $(BUILD_PATH) && tar chzvf widget_installer_$(TAG).tgz bp_installer_signed.jar bp_java_check.jar bpInstallLib.js
 endif
@@ -17,7 +12,11 @@ endif
 subdirs: $(SUBDIRS)
 
 $(SUBDIRS):
-	@$(MAKE) -C $@ $(TARGET)
+ifdef TAG
+	@$(MAKE) -C $@ tag
+else
+	@$(MAKE) -C $@
+endif
 
 .PHONY: clean
 clean:
