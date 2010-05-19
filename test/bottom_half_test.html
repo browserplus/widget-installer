@@ -33,9 +33,9 @@ var installer = BPInstaller({
   installJarName: "bp_installer.jar",
   checkJarName: "bp_java_check.jar",
   installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
-  eventHandler: function(i, e) {
+  eventHandler: function(e, i) {
     var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" +
-              e.event + "' - " + e.desc;
+              e.type + "' - " + e.desc;
     if (e.hasOwnProperty('percent')) {
       msg += "(" + e.percent + "%";
       if (e.hasOwnProperty('phase') && e.phase != null &&

@@ -79,7 +79,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
     var emitEvent = function(e, pausable, extra) {
         if (cfg && cfg.eventHandler) {
             var ev = {
-                event: e,
+                type: e,
                 desc: TheMachine[e][3],
                 pausable: pausable,
                 pause: pausable ? function() { PAUSED = true; } : null
@@ -90,7 +90,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
                     ev[k] = extra[k];
                 }
             }
-            cfg.eventHandler(self, ev);
+            cfg.eventHandler(ev, self);
         }
     }
 
