@@ -1,6 +1,6 @@
 BUILD_PATH ?= build/
 SOURCE_PATH ?= src/
-RAW_SOURCES = $(shell cd src && find com -type f -name "*.java")
+RAW_SOURCES = $(patsubst src/%,%,$(shell find src/com -type f -name "*.java"))
 SOURCES = $(addprefix src/,$(RAW_SOURCES))
 CLASSES = $(addprefix $(BUILD_PATH), $(patsubst %.java,%.class,$(RAW_SOURCES)))
 CLASS_PATH = $(BUILD_PATH)$(dir $(shell cd src && find com -name "*.java" | head -1))
