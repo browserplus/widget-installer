@@ -55,7 +55,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         ],
         startFallbackInstall: [
             true, true, startFallbackInstall_StateFunction,
-            "after we've confirmed that java is available on the machine but before we begin " +
+            "after we've confirmed that java is not available on the machine but before we begin " +
             "the installation in earnest"
         ],
         waitForUserCompletion: [
@@ -76,11 +76,11 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         }
     }
 
-    var emitEvent = function(e, pausable, extra) {
+    var emitEvent = function(type, pausable, extra) {
         if (cfg && cfg.eventHandler) {
             var ev = {
-                type: e,
-                desc: TheMachine[e][3],
+                type: type,
+                desc: TheMachine[type][3],
                 pausable: pausable,
                 pause: pausable ? function() { PAUSED = true; } : null
             };
@@ -397,15 +397,17 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
             initArgs = args;
             stateTransition("bpCheck");
         },
+
         cancel: function() {
             CANCELED = true;              
         },
-        "continue": function() {
-            debug("client invokes continue when in the '"+STATE+"' state");
+
+        resume: function() {
+            debug("client invokes resume when in the '"+STATE+"' state");
             if (PAUSED) {
                 PAUSED = false;
                 if (TheMachine[STATE] && TheMachine[STATE][2]) {
-                    debug("continuing from '"+STATE+"'");
+                    debug("resuming from '"+STATE+"'");
                     TheMachine[STATE][2]();
                 } else {
                     debug("no work to be done to continue from this state");
