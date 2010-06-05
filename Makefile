@@ -1,11 +1,11 @@
 export BUILD_PATH = $(abspath build)/
 
-SUBDIRS = src/js src/java
+SUBDIRS = src/js src/java src/css
 
 all: subdirs
 ifdef TAG
 	git tag $(TAG)
-	@cd $(BUILD_PATH) && tar chzvf widget_installer_$(TAG).tgz bp_installer_signed.jar bp_java_check.jar bpInstallLib.js
+	@cd $(BUILD_PATH) && tar chzvf widget_installer_$(TAG).tgz bp_installer_signed.jar bp_java_check.jar bp-install-lib.js bp-install.js bp-install.css bp-install-logo.png
 endif
 
 .PHONY: subdirs $(SUBDIRS) 

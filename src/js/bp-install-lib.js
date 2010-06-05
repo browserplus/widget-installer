@@ -1,5 +1,5 @@
 /*!
- *  bpInstallLib.js - A little javascript library which makes it easy
+ *  bp-install-lib.js - A little javascript library which makes it easy
  *               to integrate in-page browserplus installation.
  *
  *  Usage:
@@ -328,7 +328,7 @@ BPInstaller = typeof BPInstaller != "undefined" && BPInstaller ? BPInstaller : f
         debug("validating inclusion of browserplus.js"); 
         // if the client didn't include browserplus.js, then we cannot run
         if (typeof BrowserPlus == "undefined" || !BrowserPlus) {
-            throw "bpInstallLib.js requires browserplus.js to have been included";
+            throw "bp-install-lib.js requires browserplus.js to have been included";
         }
         debug("validated!"); 
 

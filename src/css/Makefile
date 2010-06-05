@@ -1,10 +1,8 @@
 BUILD_PATH ?= build/
-SOURCES ?= bp-install-lib.js bp-install-ui.js
+SOURCES ?= bp-install.css bp-install-logo.png
 OUTPUTS = $(addprefix $(BUILD_PATH), $(SOURCES))
-COMBO=$(addprefix $(BUILD_PATH), bp-install.js)
 
-all: $(BUILD_PATH) $(OUTPUTS) $(COMBO)
-
+all: $(BUILD_PATH) $(OUTPUTS)
 tag: all
 
 $(BUILD_PATH):
@@ -13,12 +11,8 @@ $(BUILD_PATH):
 $(OUTPUTS): $(BUILD_PATH)% : %
 	ln -s $(abspath $^) $@
 
-$(COMBO): $(SOURCES)
-	cat $(SOURCES) > $@
-
-
 .PHONY: clean distclean
-clean:
-	@rm -rf $(BUILD_PATH)
+clean: 
+	@rm -f $(OUTPUTS)
 
 distclean: clean

@@ -1,0 +1,120 @@
+#ybp_wi_overlay {
+    background:#000;
+    opacity: 0.33;
+	filter:alpha(opacity=33);
+	position: fixed;
+	top:0;
+    left:0;
+	height:100%;
+    width:100%;
+    z-index:500;
+}
+	
+#ybp_wi_dialog {
+	width: 500px;
+	background:#f7fcfe;
+	position:fixed;
+	top:100px;
+	left:200px;
+	border:2px solid #0081c2;
+	font-family: arial, sans-serif;
+	z-index:501;
+}
+
+#ybp_wi_dialog .hd {
+	background:#0081c2;
+	color:white;
+	text-align:center;
+	padding: 4px 0;
+	font-weight:bold;
+	font-size:13px;
+	line-height:16px;
+	height:16px;
+}
+		
+#ybp_wi_title {
+	float:left;
+	padding-left:10px;
+}
+
+#ybp_wi_close {
+	float:right;
+	padding-right:10px;
+	font-family: verdana, sans-serif;
+	cursor:pointer;
+}
+
+#ybp_wi_bd {
+	padding:15px;
+	font-size:13px;
+	line-height:15px;
+	text-align:left;
+	border-top:1px solid #05a;
+}
+		
+
+#ybp_wi_dialog thead {
+	font-weight:bold;
+}
+
+#ybp_wi_dialog tbody td {
+    font-size:12px;
+}
+
+#ybp_wi_dialog tbody td h2 {
+    font-size:13px;
+    font-weight:bold;
+    font-family:helvetica,arial,sans-serif;
+}
+
+#ybp_wi_logo {
+    width:75px;
+    height:75px;
+    background: transparent url(bp-install-logo.png) no-repeat 0 0;
+    margin:0 auto;
+    padding:0 5px;
+}
+
+#ybp_wi_dialog tfoot td {
+    border-top: 1px solid #e7ecee;
+    padding-top:5px;
+}
+
+#ybp_wi_tos_not {
+    font-size:13px;
+    color:green;
+}
+
+.ybp_wi_progress_container {
+    text-align:center;
+}
+
+#ybp_wi_progress {
+    position:relative;
+    /*border:1px solid #9bd;*/
+    border:1px solid #69c;
+    width:300px;
+    height:18px;
+}
+
+#ybp_wi_progress_bar {
+    position:absolute;
+    top:0px;
+    left:0px;
+    background:#cdf;
+/*    background:#ccc;*/
+    width:0;
+    height:18px;
+}
+
+#ybp_wi_progress_text {
+    position:absolute;
+    top:0px;
+    left:0px;
+    text-align:center;
+    width:100%;
+    line-height:18px;
+    z-index:511;
+    font-weight:bold;
+    font-size:14px;
+}
