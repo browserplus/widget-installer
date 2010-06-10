@@ -45,8 +45,7 @@ YUI().use('event', function(Y) {
       checkJarName: "bp_java_check.jar",
       installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
       eventHandler: function(e, i) {
-        var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" +
-                  e.type + "' - " + e.desc;
+        var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" + e.type;
         if (e.hasOwnProperty('percent')) {
           msg += "(" + e.percent + "%";
           if (e.hasOwnProperty('phase') && e.phase != null &&

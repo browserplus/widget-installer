@@ -1,52 +1,94 @@
-// create BPTool object if required
-if (typeof BPTool == "undefined" || !BPTool) {
-	var BPTool = {};
-}
-
-BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstaller ? BPTool.UIInstaller : function() {
+BPInstallerUI = typeof BPInstallerUI != "undefined" && BPInstallerUI ? BPInstallerUI : function() {
 
 	var strings = {
-		title: "Yahoo! BrowserPlus",
-		bd_image: '<img src="logo.png" hspace=5 vspace=5>',
-		bd_text: "To continue using all of the features of this website, you need to update your system " + 
-				"with the BrowserPlus plug-in.<br><br>" +
-				"The installation will take less than a minute and you won't even need to restart your browser.",
-		bd_tos: 'I agree to the <a href="#">terms of service</a> and automatic <a href="#">feature updates</a>.',
-		bd_continue: "Continue",
-		bd_notnow: "Not Now",
-		bd_tosnotchecked: "In order to continue, you need to accept the terms and conditions.",
-		java_title: "Installing Yahoo! BrowserPlus...",
-		fallback_title: "Installing Yahoo! BrowserPlus...",
-		fallback_head: "Installing is Easy!",
-		fallback_text: "During installation, click Run or Allow if prompted by dialog boxes.",
-		done_title: "Yahoo! BrowserPlus Setup - Complete",
-		done_head: "You have successfully installed Yahoo BrowserPlus",
+		// ID prefix for all elements with an ID= attribute
+		id: "ybp_wi",
+		
+		// first title that shows in dialog
+		title: 'Yahoo! BrowserPlus',
+		java_title: 'Installing Yahoo! BrowserPlus...',
+		fallback_title: 'Installing Yahoo! BrowserPlus...',
+		done_title: 'Yahoo! BrowserPlus Setup - Complete',
+
+		bd_text: 'To continue using all of the features of this website, you need to update your system ' + 
+				'with the BrowserPlus plug-in.<br><br>' +
+				'The installation will take less than a minute and you won\'t even need to restart your browser.<br><br>',
+		bd_tos: 'I agree to the <a href="#" style="color:{linkcolor}" >terms of service</a> and automatic <a href="#" style="color:{linkcolor}" >feature updates</a>.',
+		bd_continue: 'Continue',
+		bd_notnow: 'Not Now',
+		bd_tosnotchecked: 'In order to continue, you need to accept the terms and conditions.',
+
+		fallback_head: 'Installing is Easy!',
+		fallback_text_win: 'During installation, click Run or Allow if prompted by dialog boxes.',
+		fallback_text_mac: 'To install Yahoo! BrowserPlus, double-click the setup file in your Downloads folder.',
+		fallback_text: '',
+
+		done_head: 'You have successfully installed Yahoo BrowserPlus',
 		done_text: 'Yahoo! BrowserPlus updates will automatically be downloaded to provide you with the ' + 
 			'latest features and security improvements. To change this, see ' + 
-			'<a target="blank" href="http://browserplus.yahoo.com/autoupdate">'	 +
+			'<a style="color:{linkcolor}" target="blank" href="http://browserplus.yahoo.com/autoupdate">'	 +
 			'http://browserplus.yahoo.com/autoupdate</a>.',
-		done_button: "Close"
+		done_button: 'Close',
+
+		// browserplus logo
+		icon:   "http://browserplus.org/i/bp-install-logo.png",
+		icon_w: "75",
+		icon_h: "75",
+		
+		// main font
+		font:      "arial, sans-serif",
+		fontsize: "12px",
+		fontcolor: "#333",
+		linkcolor: "#00c",
+
+		titlebg:  "#0081c2",  // title bar and border
+		titlebg1: "#6ad",    // brighter, top of title bar
+		titlebg2: "#35a",    // darker, bottom of title bar
+		titlefg:  "white",   // titlebar text
+		dialogbg: "#f7fcfe", // dialog background
+
+
+		// in-line style attributes ... so there's no external CSS requirements
+		s_overlay:        'background:#000; opacity: 0.33; filter:alpha(opacity=33); position: fixed; top:0; left:0; height:100%; width:100%; z-index:500;',
+		s_dialog:         'background:{dialogbg}; color:{fontcolor}; position:fixed; top:100px; left:200px; width: 500px; border:2px solid {titlebg}; border-top:1px solid {titlebg1};font:{fontsize} {font}; z-index:501;line-height:1.3em;',
+		s_image:          'width:{icon_w}px;height:{icon_h}px; background: transparent url({icon}) no-repeat 0 0; margin:0 auto; padding:0 5px;',
+		s_titlebar:       'background:{titlebg}; color:{titlefg}; padding: 4px 5px; font: bold 108% {font};',
+		s_bd:             'padding:10px 10px 5px 10px; text-align:left; border-top:1px solid {titlebg2};',
+		s_dialog_head:    'font:bold 108% {font};',
+		s_buttons:        'border-top: 1px solid #e7ecee; padding-top:5px;',
+		s_tos_not:        'color:green;',
+		s_progress_outer: 'text-align:center;',
+		s_progress:       'position:relative; border:1px solid #69c; width:300px; height:18px; margin:0 auto;',
+		s_progress_bar:   'position:absolute; top:0px; left:0px; background:#cdf; width:0; height:18px;',
+		s_progress_text:  'position:absolute; top:0px; left:0px; text-align:center; width:100%; font:bold 14px/18px {font}; z-index:511;',
+		
+		// so the last entry is comma-less
+		noop: ''
 	},
 	
 	installer,
+	installerCallbackValue,
+	isInstalling = false,
+	userCallback,
+	
 	
 	// Page "2" of dialog for those without Java - shows "Click Allow or Run" text
 	fallbackTmpl = 
 		'<table border=0 width="100%" height="auto">' +
 			'<tbody><tr>' +
-				'<td valign=top>{bd_image}</td>' +
-				'<td valign=top><h2>{fallback_head}</h2>{fallback_text}</td>' +
+				'<td valign=top><div style="{s_image}"></div></td>' +
+				'<td valign=top><h2 style="{s_dialog_head}">{fallback_head}</h2>{fallback_text}</td>' +
 			'</tr></tbody>' +
 		'</table>',
 
 
 	// Page "2" of dialog for those with Java - shows progress bar
 	javaTmpl = 
-		'<div class="ybp_wi_progress_container">' +
-			'<div>{bd_image}</div>' +
-			'<div id="ybp_wi_progress" style="margin:0 auto;">' +
-				'<div id="ybp_wi_progress_bar"></div>' +
-				'<div id="ybp_wi_progress_text">0%</div>' +
+		'<div style="{s_progress_outer}">' +
+			'<div><div style="{s_image}"></div></div>' +
+			'<div id="{id}_progress" style="{s_progress}">' +
+				'<div id="{id}_progress_bar" style="{s_progress_bar}"></div>' +
+				'<div id="{id}_progress_text" style="{s_progress_text}">0%</div>' +
 			'</div>' +
 		'</div>',
 		
@@ -54,12 +96,12 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 	doneTmpl =
 		'<table border=0 width="100%" height="auto">' +
 			'<tbody><tr>' +
-				'<td valign=top>{bd_image}</td>' +
-				'<td valign=top><h2>{done_head}</h2>{done_text}</td>' +
+				'<td valign=top><div style="{s_image}"></div></td>' +
+				'<td valign=top><h2 style="{s_dialog_head}">{done_head}</h2>{done_text}</td>' +
 			'</tr></tbody>' +
 			'<tfoot><tr>' +
-				'<td align=right colspan=2>' +
-					'<button id="ybp_wi_bt3">{done_button}</button>' +
+				'<td align=right colspan=2 style="{s_buttons}">' +
+					'<button id="{id}_bt3">{done_button}</button>' +
 				'</td>' +
 			'</tr></tfoot>' +
 		'</table>',
@@ -67,31 +109,33 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 
 	// Page "1" of dialog
 	dialogTmpl = 
-		'<div class="hd">' +
-			'<div id="ybp_wi_title">{title}</div><div id="ybp_wi_close">x</div>' + 
-		'</div>' +
-		'<div id="ybp_wi_bd">' +
-			'<table border=0 width="100%" height="auto">' +
-				'<tbody>' + 
-					'<tr>' +
-						'<td valign=top>{bd_image}</td>' +
-						'<td>{bd_text}</td>' +
-					'</tr>' +
-					'<tr>' +
-						'<td align="center" colspan=2>' +
-							'<div><input id="ybp_wi_cb" type="checkbox">{bd_tos}</div>' +
-							'<p id="ybp_wi_tos_not" style="display:none">{bd_tosnotchecked}</p>' +
-						'</td>' +								
-					'</tr>' +
-				'</tbody>' +
-				'<tfoot><tr>'+
-					'<td align=right colspan=2>' +
-						'<button id="ybp_wi_bt1">{bd_continue}</button> <button id="ybp_wi_bt2">{bd_notnow}</button>' +
-					'</td>' +
-				'</tr></tfoot>' +
-			'</table>' +
+		'<div id="{id}_dialog" style="{s_dialog}">' +
+			'<div id="{id}_title" style="{s_titlebar}">{title}</div>' +
+			'<div id="{id}_bd" style="{s_bd}">' +
+				'<table border=0 width="100%" height="auto">' +
+					'<tbody>' + 
+						'<tr>' +
+							'<td valign=top><div style="{s_image}"></div></td>' +
+							'<td>{bd_text}</td>' +
+						'</tr>' +
+						'<tr>' +
+							'<td align="center" colspan=2>' +
+								'<div><input id="{id}_cb" type="checkbox"><label for="{id}_cb">{bd_tos}</label></div>' +
+								'<p id="{id}_tos_not" style="display:none; {s_tos_not}">{bd_tosnotchecked}</p>' +
+							'</td>' +								
+						'</tr>' +
+					'</tbody>' +
+					'<tfoot><tr>'+
+						'<td align=right colspan=2 style="{s_buttons}">' +
+							'<button id="{id}_bt1">{bd_continue}</button> <button id="{id}_bt2">{bd_notnow}</button>' +
+						'</td>' +
+					'</tr></tfoot>' +
+				'</table>' +
+			'</div>' +
 		'</div>',
 		
+		overlayTmpl = '<div id="{id}_overlay" style="{s_overlay}"></div>',
+			
 		Dialog,
 		Overlay,
 
@@ -141,6 +185,11 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 		return typeof o === 'string';
 	}
 
+	function isObject(o) {
+		return typeof o === 'object';
+	}
+
+	// thank you YUI
 	function substitute(s, o) {
 		var i, j, k, key, v, meta, saved=[], token, SPACE=' ', LBRACE='{', RBRACE='}';
 
@@ -196,9 +245,9 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 	}
 	
 	function getViewportSize() {
-		var width = self.innerWidth;   // Safari, Operaa
-		var height = self.innerHeight; // Safari, Opera
-		var mode = document.compatMode;
+		var width = window.innerWidth,   // Safari, Operaa
+		 	height = window.innerHeight, // Safari, Opera
+			mode = document.compatMode;
 
 		if ( (mode || ua.ie) && !ua.opera ) { // IE, Gecko
 			if (mode === 'CSS1Compat') {
@@ -232,29 +281,34 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 
 	function goAway() {
 		// remove all traces
-		removeListener("ybp_wi_bt1", "click", buttonCB);
-		removeListener("ybp_wi_bt2", "click", goAway);
-		removeListener("ybp_wi_bt3", "click", goAway);
-		removeListener("ybp_wi_close", "click", goAway);
+		removeListener(strings.id + "_bt1", "click", buttonCB);
+		removeListener(strings.id + "_bt2", "click", goAway);
+		removeListener(strings.id + "_bt3", "click", goAway);
+
 		removeListener(window, "resize", resizeCB);
 		Dialog.parentNode.removeChild(Dialog);
 		Overlay.parentNode.removeChild(Overlay);			
+
+		if (installerCallbackValue) {
+			userCallback(installerCallbackValue);
+		}
 	}
 
 	function buttonCB(e) {
-		var tos = get("ybp_wi_cb");
+		var tos = get(strings.id + "_cb");
 		if (tos.checked) {
 			installer.resume();
-			// control back to installCB
+			// control back to myEventHandler
 		} else {
-			get("ybp_wi_tos_not").style.display="block";
+			get(strings.id + "_tos_not").style.display="block";
 		}
 	}
 
 	function showOverlay() {
-		Overlay = document.createElement("div");
-		Overlay.id = "ybp_wi_overlay";
-		document.body.appendChild(Overlay);
+		var e = document.createElement("div");
+		e.innerHTML = substitute(overlayTmpl, strings);
+		document.body.appendChild(e);
+		Overlay = get(strings.id + "_overlay");
 		/*
 		if (ua.ie) {
 			//overlay.style.top = Math.max(document.body.scrollTop,document.documentElement.scrollTop) + 'px';
@@ -267,76 +321,125 @@ BPTool.UIInstaller = typeof BPTool.UIInstaller != "undefined" && BPTool.UIInstal
 	}
 
 	function showDialog() {
-		Dialog = document.createElement("div");
-		Dialog.id = "ybp_wi_dialog";
-		document.body.appendChild(Dialog);
-
-		Dialog.innerHTML = substitute(dialogTmpl, strings);
+		var e = document.createElement("div");
+		document.body.appendChild(e);
+		e.innerHTML = substitute(dialogTmpl, strings);
+		Dialog = get(strings.id + "_dialog");
 		resizeCB();
 		addListener(window, "resize", resizeCB);
-		addListener("ybp_wi_bt1", "click", buttonCB);
-		addListener("ybp_wi_bt2", "click", goAway);
-		addListener("ybp_wi_close", "click", goAway);
+		addListener(strings.id + "_bt1", "click", buttonCB);
+		addListener(strings.id + "_bt2", "click", goAway);
 	}
 	
-	function installCB(e, ii) {
+	function myEventHandler(e, ii) {
 		var bd, title, percent, type = e.type, pbar, ptext, dialog;
 
-		dialog =  get("ybp_wi_dialog");
+		dialog =  get(strings.id + "_dialog");
 
-		bd = get("ybp_wi_bd");
-		title = get("ybp_wi_title"),
+		bd = get(strings.id + "_bd");
+		title = get(strings.id + "_title");
 		percent = 0;
 
 		if (type === "javaCheck") {
+			// when isInstalling true, we delay the callback to the function passed in start
+			isInstalling = true;
 			e.pause();
 			showOverlay();
 			showDialog();
 		} else if (type === "startFallbackInstall") {
-			removeListener("ybp_wi_bt1", "click", buttonCB);
-			removeListener("ybp_wi_bt2", "click", goAway);
+			removeListener(strings.id + "_bt1", "click", buttonCB);
+			removeListener(strings.id + "_bt2", "click", goAway);
 			bd.innerHTML = substitute(fallbackTmpl, strings);
 			title.innerHTML = strings.fallback_title;
 			// show instructions
 		} else if (type === "startJavaInstall") {
-			removeListener("ybp_wi_bt1", "click", buttonCB);
-			removeListener("ybp_wi_bt2", "click", goAway);
+			removeListener(strings.id + "_bt1", "click", buttonCB);
+			removeListener(strings.id + "_bt2", "click", goAway);
 
 			bd.innerHTML = substitute(javaTmpl, strings);
 			title.innerHTML = strings.java_title;
 			// show java install progress
 		} else if (type === "running") {
 			if (e.hasOwnProperty('percent')) {
-				pbar = get("ybp_wi_progress_bar");
-				ptext = get("ybp_wi_progress_text");
+				pbar = get(strings.id + "_progress_bar");
+				ptext = get(strings.id + "_progress_text");
 				if (pbar && ptext) {
 					percent = ""+parseInt(e.percent, 10) + "%";
-					get("ybp_wi_progress_bar").style.width = percent;
-					get("ybp_wi_progress_text").innerHTML = percent;
+					get(strings.id + "_progress_bar").style.width = percent;
+					get(strings.id + "_progress_text").innerHTML = percent;
 				}
 			}
 		} else if (type === "complete" && dialog) {
 			bd.innerHTML = substitute(doneTmpl, strings);
 			title.innerHTML = strings.done_title;
-			addListener("ybp_wi_bt3", "click", goAway);
-			// need to register Done button
+			addListener(strings.id + "_bt3", "click", goAway);
+		}
+	}
+	
+	function myStartCallback(e) {
+		// Callback the user supplied callback immediately when BrowserPlus is already installed.
+		// Otherwise, save the value and callback after the dialog has been dismissed.
+		if (isInstalling) {
+			installerCallbackValue = e;
+		} else {
+			userCallback(e);
 		}
 	}
 
 
-	installer = BPInstaller({
-		pathToJar: ".",
-		installJarName: "bp_installer_signed.jar",
-		checkJarName: "bp_java_check.jar",
-		installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
-		eventHandler: installCB});
-
 	return {
-		start: function(cb) {
-			installer.start(function(r) {
-				cb(r);
-			});
+		start: function(cfg, fn) {
+			var key, strs, 
+				defaultCFG = {
+					pathToJar: ".",
+					installJarName: "bp-installer.jar",
+					checkJarName: "bp-java-check.jar",
+					installURL: "http://browserplus.yahoo.com/dist/v2/installer/"
+				};
+
+			userCallback = fn;
+
+			if (!userCallback) {
+				userCallback = cfg;
+				cfg = {};
+			} 
+
+			cfg = cfg || {};
+
+			if (typeof userCallback !== 'function') { throw "No callback function provided to start()";}
+			if (typeof cfg !== 'object') { throw "Config object passed to start() is not an object.";}
+
+			// set defaults if not already set
+			for (key in defaultCFG) {
+				if (defaultCFG.hasOwnProperty(key)) {
+					cfg[key] = cfg[key] || defaultCFG[key];
+				}
+			}
+			
+			// allow caller to override any "strings" property
+			if (cfg.hasOwnProperty("strings") && isObject(cfg)) {
+				strs = cfg.strings;
+				for (key in strs) {
+					if (strs.hasOwnProperty(key) && isString(strs[key])) {
+						strings[key] = strs[key];
+					}
+				}
+			}
+
+			// event handler must point back to our handler
+			cfg.eventHandler = myEventHandler;
+
+			installer = BPInstaller(cfg);
+
+			// Platform specific language
+			if (BrowserPlus.clientSystemInfo().os === "Mac") {
+				strings.fallback_text = strings.fallback_text_mac;
+			} else {
+				strings.fallback_text = strings.fallback_text_win;				
+			}
+
+			installer.start({}, myStartCallback);
 		}
 	};
-
+	
 }();

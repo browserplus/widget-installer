@@ -5,9 +5,9 @@ SOURCES = $(addprefix src/,$(RAW_SOURCES))
 CLASSES = $(addprefix $(BUILD_PATH), $(patsubst %.java,%.class,$(RAW_SOURCES)))
 CLASS_PATH = $(BUILD_PATH)$(dir $(shell cd src && find com -name "*.java" | head -1))
 CLASS_GLOB = *.class
-CHECKJARFILE = $(BUILD_PATH)bp_java_check.jar
-FULLJARFILE = $(BUILD_PATH)bp_installer.jar
-FULLPRODJARFILE = $(BUILD_PATH)bp_installer_signed.jar
+CHECKJARFILE = $(BUILD_PATH)bp-java-check.jar
+FULLJARFILE = $(BUILD_PATH)bp-installer.jar
+FULLPRODJARFILE = $(BUILD_PATH)bp-installer-signed.jar
 HAVE_KEYS := $(strip $(shell keytool -list -alias $$USER -storepass browserplus 2>&1 | grep Exception))
 
 .PHONY: all tag

@@ -1,6 +1,6 @@
 export BUILD_PATH = $(abspath build)/
 
-SUBDIRS = src/js src/java src/css
+SUBDIRS = src/js src/java
 
 all: subdirs
 ifdef TAG
