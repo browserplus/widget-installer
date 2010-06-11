@@ -1,7 +1,8 @@
 BUILD_PATH ?= build/
 SOURCES ?= bp-install-lib.js bp-install-ui.js
 OUTPUTS = $(addprefix $(BUILD_PATH), $(SOURCES))
-COMBO=$(addprefix $(BUILD_PATH), bp-install.js)
+COMBO=$(addprefix $(BUILD_PATH), install.js)
+COMBO_MIN=$(addprefix $(BUILD_PATH), install-min.js)
 
 all: $(BUILD_PATH) $(OUTPUTS) $(COMBO)
 
@@ -15,7 +16,7 @@ $(OUTPUTS): $(BUILD_PATH)% : %
 
 $(COMBO): $(SOURCES)
 	cat $(SOURCES) > $@
-
+	yuicompressor $(COMBO) > $(COMBO_MIN)
 
 .PHONY: clean distclean
 clean:
