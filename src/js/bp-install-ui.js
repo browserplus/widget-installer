@@ -33,7 +33,7 @@ BPInstallerUI = typeof BPInstallerUI != "undefined" && BPInstallerUI ? BPInstall
 		done_button: 'Close',
 
 		// browserplus logo
-		icon:   "http://browserplus.org/i/bp-install-logo.png",
+		icon:   "http://l.yimg.com/a/i/us/bp/s/1.99/bp-install-logo.png",
 		icon_w: "75",
 		icon_h: "75",
 		
