@@ -30,8 +30,8 @@ try {
 var installer = BPInstaller({
   debug: debugFunction,
   pathToJar: "../build",
-  installJarName: "bp_installer.jar",
-  checkJarName: "bp_java_check.jar",
+  installJarName: "bp-installer.jar",
+  checkJarName: "bp-java-check.jar",
   installURL: "http://browserplus.yahoo.com/dist/v2/installer/",
   eventHandler: function(e, i) {
     var msg = "("+ (new Date() - startTime) +"ms) - Entering "+(e.pausable ? "pausable " :"")+"state:\t'" + e.type;
